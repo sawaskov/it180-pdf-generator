@@ -1,0 +1,17 @@
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+ENV/
+.venv
+*.zip
+# Allow template PDF files needed for the app
+!Templates/*.pdf
+!IT180-Declaration-by-Employer-to-Claim-Deduction-against-Learnerships-External-Form.pdf
+temp/
+tmp/
+.DS_Store
+*.log
