@@ -14,7 +14,7 @@ import threading
 import time
 from werkzeug.utils import secure_filename
 
-app = Flask(__name__)
+app = Flask(__name__, template_folder='Templates', static_folder='static')
 app.secret_key = os.environ.get('SECRET_KEY', 'your-secret-key-change-this-in-production')
 app.config['MAX_CONTENT_LENGTH'] = 50 * 1024 * 1024  # 50MB max file size
 app.config['UPLOAD_FOLDER'] = tempfile.mkdtemp()
@@ -396,9 +396,29 @@ def populate_pdf_for_row(row_data, template_path):
     
     return output_buffer, learner_name, learner_id
 
+@app.errorhandler(500)
+def internal_error(error):
+    """Handle 500 errors with detailed logging"""
+    import traceback
+    error_msg = str(error)
+    traceback_str = traceback.format_exc()
+    print(f"500 Error: {error_msg}")
+    print(f"Traceback: {traceback_str}")
+    return jsonify({'error': 'Internal server error. Please check the server logs for details.'}), 500
+
+@app.errorhandler(404)
+def not_found(error):
+    return jsonify({'error': 'Resource not found'}), 404
+
 @app.route('/')
 def index():
-    return render_template('index.html')
+    try:
+        return render_template('index.html')
+    except Exception as e:
+        import traceback
+        print(f"Error rendering index: {str(e)}")
+        print(traceback.format_exc())
+        return f"Error loading page: {str(e)}", 500
 
 @app.route('/test-logo')
 def test_logo():
@@ -650,8 +670,29 @@ if __name__ == '__main__':
             if os.path.exists(folder):
                 shutil.rmtree(folder)
             os.makedirs(folder, exist_ok=True)
-    except:
-        pass
+    except Exception as e:
+        print(f"Warning: Could not clean up temp directories: {e}")
+    
+    # Verify template file exists
+    template_paths = [
+        os.path.join(os.path.dirname(os.path.abspath(__file__)), 
+                    'IT180-Declaration-by-Employer-to-Claim-Deduction-against-Learnerships-External-Form.pdf'),
+        os.path.join(os.path.dirname(os.path.abspath(__file__)), 
+                    'Templates', 
+                    'IT180-Declaration-by-Employer-to-Claim-Deduction-against-Learnerships-External-Form.pdf')
+    ]
+    template_found = any(os.path.exists(path) for path in template_paths)
+    if not template_found:
+        print("WARNING: PDF template file not found. The application may not work correctly.")
+    else:
+        print("✓ PDF template file found")
+    
+    # Verify template HTML exists
+    template_html = os.path.join(app.template_folder, 'index.html')
+    if os.path.exists(template_html):
+        print("✓ HTML template found")
+    else:
+        print(f"WARNING: HTML template not found at {template_html}")
     
     # Get port from environment variable (for cloud deployment) or use 5000
     port = int(os.environ.get('PORT', 5000))
@@ -659,4 +700,6 @@ if __name__ == '__main__':
     
     print("Starting IT180 PDF Generator Web Application...")
     print(f"Server running on port {port}")
+    print(f"Template folder: {app.template_folder}")
+    print(f"Static folder: {app.static_folder}")
     app.run(debug=debug, host='0.0.0.0', port=port)
