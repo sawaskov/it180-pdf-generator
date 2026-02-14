@@ -404,7 +404,13 @@ def internal_error(error):
     traceback_str = traceback.format_exc()
     print(f"500 Error: {error_msg}")
     print(f"Traceback: {traceback_str}")
-    return jsonify({'error': 'Internal server error. Please check the server logs for details.'}), 500
+    
+    # Check if this is an API request (expects JSON)
+    if request.path.startswith('/upload') or request.is_json or request.content_type == 'application/json':
+        return jsonify({'error': 'Internal server error. Please check the server logs for details.', 'success': False}), 500
+    else:
+        # For regular page requests, return HTML error page
+        return f"<h1>500 Internal Server Error</h1><p>An error occurred. Please check the server logs.</p>", 500
 
 @app.errorhandler(404)
 def not_found(error):
@@ -581,7 +587,11 @@ def upload_file():
                 os.remove(upload_path)
             except:
                 pass
-        return jsonify({'error': f'Server error: {str(e)}'}), 500
+        import traceback
+        error_trace = traceback.format_exc()
+        print(f"Upload error: {str(e)}")
+        print(f"Traceback: {error_trace}")
+        return jsonify({'error': f'Server error: {str(e)}', 'success': False}), 500
 
 def cleanup_session_files(output_dir):
     """Clean up all files in a session directory after download"""

@@ -85,17 +85,28 @@ function uploadFile(file) {
         method: 'POST',
         body: formData
     })
-    .then(response => response.json())
-    .then(data => {
+    .then(async response => {
+        // Check if response is JSON
+        const contentType = response.headers.get('content-type');
+        if (contentType && contentType.includes('application/json')) {
+            const data = await response.json();
+            return { ok: response.ok, data: data, status: response.status };
+        } else {
+            // If not JSON, read as text to see what we got
+            const text = await response.text();
+            throw new Error(`Server returned HTML instead of JSON. Status: ${response.status}. Response: ${text.substring(0, 200)}`);
+        }
+    })
+    .then(result => {
         clearInterval(progressInterval);
         progressFill.style.width = '100%';
         progressText.textContent = 'Complete!';
 
         setTimeout(() => {
-            if (data.success) {
-                showResults(data);
+            if (result.ok && result.data.success) {
+                showResults(result.data);
             } else {
-                showError(data.error || 'An error occurred while processing the file');
+                showError(result.data.error || 'An error occurred while processing the file');
             }
             progressSection.style.display = 'none';
         }, 500);
@@ -103,7 +114,16 @@ function uploadFile(file) {
     .catch(error => {
         clearInterval(progressInterval);
         progressSection.style.display = 'none';
-        showError('Network error: ' + error.message);
+        // Extract meaningful error message
+        let errorMsg = 'An error occurred while processing the file';
+        if (error.message) {
+            if (error.message.includes('HTML instead of JSON')) {
+                errorMsg = 'Server error: The server returned an error page. Please check the server logs or try again.';
+            } else {
+                errorMsg = 'Error: ' + error.message;
+            }
+        }
+        showError(errorMsg);
     });
 }
 
