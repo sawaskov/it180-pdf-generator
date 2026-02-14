@@ -30,7 +30,11 @@ uploadBox.addEventListener('drop', (e) => {
     }
 });
 
-uploadBox.addEventListener('click', () => {
+uploadBox.addEventListener('click', (e) => {
+    // Don't trigger if clicking the button or its children
+    if (e.target.closest('.btn-primary')) {
+        return;
+    }
     fileInput.click();
 });
 

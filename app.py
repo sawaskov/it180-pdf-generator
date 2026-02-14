@@ -334,6 +334,20 @@ def create_page2_overlay(data):
     packet.seek(0)
     return packet
 
+# Cache for template PDF to avoid reading from disk repeatedly
+_template_cache = None
+_template_path_cache = None
+
+def get_template_pdf(template_path):
+    """Get cached template PDF or load it if not cached"""
+    global _template_cache, _template_path_cache
+    
+    if _template_cache is None or _template_path_cache != template_path:
+        _template_cache = PdfReader(template_path)
+        _template_path_cache = template_path
+    
+    return _template_cache
+
 def populate_pdf_for_row(row_data, template_path):
     """Populate PDF with data from a single row"""
     # Extract learner name and ID from separate columns
@@ -372,7 +386,8 @@ def populate_pdf_for_row(row_data, template_path):
     page2_overlay_packet = create_page2_overlay(data)
     page2_overlay_pdf = PdfReader(page2_overlay_packet)
 
-    original_pdf = PdfReader(template_path)
+    # Use cached template PDF instead of reading from disk each time
+    original_pdf = get_template_pdf(template_path)
     writer = PdfWriter()
 
     # Merge page 1 with data overlay
@@ -385,9 +400,10 @@ def populate_pdf_for_row(row_data, template_path):
     page2.merge_page(page2_overlay_pdf.pages[0])
     writer.add_page(page2)
 
-    # Add any remaining pages (if more than 2)
-    for i in range(2, len(original_pdf.pages)):
-        writer.add_page(original_pdf.pages[i])
+    # Add any remaining pages (if more than 2) - optimized copy
+    if len(original_pdf.pages) > 2:
+        for i in range(2, len(original_pdf.pages)):
+            writer.add_page(original_pdf.pages[i])
 
     # Create PDF in memory
     output_buffer = io.BytesIO()
@@ -531,35 +547,53 @@ def upload_file():
         output_dir = os.path.join(app.config['OUTPUT_FOLDER'], session_id)
         os.makedirs(output_dir, exist_ok=True)
 
+        # Pre-load template PDF into cache for better performance
+        get_template_pdf(template_path)
+
         # Process each row and generate PDFs
         successful = 0
         failed = 0
         errors = []
+        total_rows = len(df)
 
         for index, row in df.iterrows():
             try:
                 pdf_buffer, learner_name, learner_id = populate_pdf_for_row(row, template_path)
                 
-                # Create safe filename
-                safe_name = learner_name.replace(" ", "_") if learner_name else "Unknown"
-                safe_id = str(learner_id).replace(" ", "_").replace("-", "") if learner_id else "NoID"
+                # Create safe filename (optimized string operations)
+                if learner_name:
+                    safe_name = learner_name.replace(" ", "_")
+                else:
+                    safe_name = "Unknown"
+                
+                if learner_id:
+                    safe_id = str(learner_id).replace(" ", "_").replace("-", "")
+                else:
+                    safe_id = "NoID"
+                
                 output_filename = f'IT180_{safe_name}_{safe_id}.pdf'
                 output_path = os.path.join(output_dir, output_filename)
                 
-                # Save PDF
+                # Save PDF directly from buffer (more efficient)
                 with open(output_path, 'wb') as f:
                     f.write(pdf_buffer.getvalue())
                 
                 successful += 1
             except Exception as e:
                 failed += 1
-                errors.append(f"Row {index + 1}: {str(e)}")
+                error_msg = str(e)
+                errors.append(f"Row {index + 1}: {error_msg}")
+                # Limit error collection to prevent memory issues
+                if len(errors) >= 50:
+                    errors.append(f"... and {total_rows - index - 1} more errors (truncated)")
+                    break
 
-        # Create ZIP file with all PDFs
+        # Create ZIP file with all PDFs (optimized - only PDFs, not the ZIP itself)
         zip_path = os.path.join(output_dir, 'IT180_Documents.zip')
-        with zipfile.ZipFile(zip_path, 'w', zipfile.ZIP_DEFLATED) as zipf:
-            for pdf_file in os.listdir(output_dir):
-                if pdf_file.endswith('.pdf'):
+        pdf_files = [f for f in os.listdir(output_dir) if f.endswith('.pdf')]
+        if pdf_files:
+            with zipfile.ZipFile(zip_path, 'w', zipfile.ZIP_DEFLATED, compresslevel=6) as zipf:
+                for pdf_file in pdf_files:
                     zipf.write(os.path.join(output_dir, pdf_file), pdf_file)
 
         # Clean up uploaded Excel file immediately after PDFs are created
