@@ -15,3 +15,27 @@ temp/
 tmp/
 .DS_Store
 *.log
+
+# Generated output files
+Output/
+
+# Archive folder with old/test files
+Archive/
+
+# Input files (may contain sensitive data)
+Input/
+
+# IDE and editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS files
+Thumbs.db
+.DS_Store
+
+# Environment variables
+.env
+.env.local
