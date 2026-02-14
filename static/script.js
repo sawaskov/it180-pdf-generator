@@ -1,5 +1,6 @@
 const fileInput = document.getElementById('fileInput');
 const uploadBox = document.getElementById('uploadBox');
+const chooseFileBtn = document.getElementById('chooseFileBtn');
 const fileInfo = document.getElementById('fileInfo');
 const progressSection = document.getElementById('progressSection');
 const resultsSection = document.getElementById('resultsSection');
@@ -9,6 +10,13 @@ const progressText = document.getElementById('progressText');
 const downloadBtn = document.getElementById('downloadBtn');
 
 let currentSessionId = null;
+
+// Button click handler - prevent event bubbling
+chooseFileBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    e.preventDefault();
+    fileInput.click();
+});
 
 // Drag and drop handlers
 uploadBox.addEventListener('dragover', (e) => {
@@ -31,8 +39,8 @@ uploadBox.addEventListener('drop', (e) => {
 });
 
 uploadBox.addEventListener('click', (e) => {
-    // Don't trigger if clicking the button or its children
-    if (e.target.closest('.btn-primary')) {
+    // Don't trigger if clicking the button, its children, or any interactive element
+    if (e.target.closest('.btn-primary') || e.target.closest('button') || e.target.tagName === 'BUTTON') {
         return;
     }
     fileInput.click();
@@ -41,6 +49,8 @@ uploadBox.addEventListener('click', (e) => {
 fileInput.addEventListener('change', (e) => {
     if (e.target.files.length > 0) {
         handleFile(e.target.files[0]);
+        // Reset input to allow selecting the same file again if needed
+        e.target.value = '';
     }
 });
 
@@ -72,24 +82,20 @@ function uploadFile(file) {
     const formData = new FormData();
     formData.append('file', file);
 
-    // Show progress
+    // Show progress immediately
     progressSection.style.display = 'block';
-    progressFill.style.width = '0%';
+    progressFill.style.width = '10%';
     progressText.textContent = 'Uploading and processing...';
 
-    // Simulate progress (since we can't track actual progress easily)
-    let progress = 0;
-    const progressInterval = setInterval(() => {
-        progress += Math.random() * 15;
-        if (progress > 90) progress = 90;
-        progressFill.style.width = progress + '%';
-    }, 200);
-
+    // Start fetch immediately - no artificial delays
     fetch('/upload', {
         method: 'POST',
         body: formData
     })
     .then(async response => {
+        progressFill.style.width = '70%';
+        progressText.textContent = 'Processing file...';
+        
         // Check if response is JSON
         const contentType = response.headers.get('content-type');
         if (contentType && contentType.includes('application/json')) {
@@ -102,21 +108,18 @@ function uploadFile(file) {
         }
     })
     .then(result => {
-        clearInterval(progressInterval);
         progressFill.style.width = '100%';
         progressText.textContent = 'Complete!';
 
-        setTimeout(() => {
-            if (result.ok && result.data.success) {
-                showResults(result.data);
-            } else {
-                showError(result.data.error || 'An error occurred while processing the file');
-            }
-            progressSection.style.display = 'none';
-        }, 500);
+        // Show results immediately - no artificial delay
+        if (result.ok && result.data.success) {
+            showResults(result.data);
+        } else {
+            showError(result.data.error || 'An error occurred while processing the file');
+        }
+        progressSection.style.display = 'none';
     })
     .catch(error => {
-        clearInterval(progressInterval);
         progressSection.style.display = 'none';
         // Extract meaningful error message
         let errorMsg = 'An error occurred while processing the file';

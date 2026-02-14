@@ -27,17 +27,18 @@ def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 def clean_text(text):
-    """Remove special characters, replace tabs with spaces, clean text for PDF"""
+    """Remove special characters, replace tabs with spaces, clean text for PDF - optimized"""
     if not text or pd.isna(text):
         return ''
     text = str(text)
-    # Replace tabs with spaces
+    # Fast path for common case (no special chars)
+    if '\t' not in text and not any(ord(c) < 32 and c not in ['\n', '\r'] for c in text):
+        # Just normalize whitespace and strip
+        return ' '.join(text.split())
+    # Full cleaning for special cases
     text = text.replace('\t', ' ')
-    # Replace multiple spaces with single space
     text = re.sub(r'\s+', ' ', text)
-    # Remove other control characters
     text = ''.join(char for char in text if ord(char) >= 32 or char in ['\n', '\r'])
-    # Strip leading/trailing whitespace
     return text.strip()
 
 def create_overlay(data):
