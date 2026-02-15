@@ -1,6 +1,6 @@
 services:
   - type: web
-    name: it180-pdf-generator
+    name: it180_pdf_generator
     env: node
     rootDir: .
     buildCommand: npm install
