@@ -38,6 +38,74 @@ const outputDir = path.join(tempDir, 'output');
 fs.ensureDirSync(uploadDir);
 fs.ensureDirSync(outputDir);
 
+/**
+ * Clean up PDF batches older than 1 hour from the output directory
+ * Session IDs are in format: YYYY-MM-DDTHH-MM-SS (e.g., "2026-02-15T08-30-45")
+ */
+async function cleanupOldBatches() {
+  try {
+    if (!fs.existsSync(outputDir)) {
+      return;
+    }
+    
+    const items = await fs.readdir(outputDir);
+    const now = new Date();
+    const oneHourAgo = now.getTime() - (60 * 60 * 1000); // 1 hour in milliseconds
+    let deletedCount = 0;
+    
+    // Check each directory (session folder) in the output directory
+    for (const item of items) {
+      const itemPath = path.join(outputDir, item);
+      const stats = await fs.stat(itemPath);
+      
+      // Only process directories (session folders), not files
+      if (stats.isDirectory()) {
+        try {
+          // Parse sessionId back to Date
+          // Format: "2026-02-15T08-30-45" -> convert to "2026-02-15T08:30:45" for parsing
+          const parts = item.split('T');
+          if (parts.length === 2) {
+            // Replace dashes in time portion with colons
+            const timePart = parts[1].replace(/-/g, ':');
+            const sessionIdForParsing = `${parts[0]}T${timePart}`;
+            const sessionDate = new Date(sessionIdForParsing);
+            
+            // Check if session is older than 1 hour
+            if (!isNaN(sessionDate.getTime()) && sessionDate.getTime() < oneHourAgo) {
+              await fs.remove(itemPath);
+              deletedCount++;
+              console.log(`Cleaned up batch older than 1 hour: ${item}`);
+            }
+          } else {
+            // Fallback: use directory modification time if sessionId format is unexpected
+            const dirModTime = stats.mtime.getTime();
+            if (dirModTime < oneHourAgo) {
+              await fs.remove(itemPath);
+              deletedCount++;
+              console.log(`Cleaned up batch older than 1 hour (by mtime): ${item}`);
+            }
+          }
+        } catch (parseError) {
+          // If we can't parse the sessionId, check by directory modification time instead
+          const dirModTime = stats.mtime.getTime();
+          if (dirModTime < oneHourAgo) {
+            await fs.remove(itemPath);
+            deletedCount++;
+            console.log(`Cleaned up batch older than 1 hour (by mtime): ${item}`);
+          }
+        }
+      }
+    }
+    
+    if (deletedCount > 0) {
+      console.log(`Cleanup completed: ${deletedCount} batch(es) deleted`);
+    }
+  } catch (error) {
+    console.error('Error cleaning up old batches:', error);
+    // Don't throw - allow processing to continue even if cleanup fails
+  }
+}
+
 // Routes
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'views', 'index.html'));
@@ -153,4 +221,14 @@ app.listen(PORT, () => {
   console.log(`Starting IT180 PDF Generator Web Application...`);
   console.log(`Server running on http://localhost:${PORT}`);
   console.log(`Open your browser and navigate to: http://localhost:${PORT}`);
+  
+  // Run cleanup on server start
+  cleanupOldBatches();
+  
+  // Set up periodic cleanup every 15 minutes
+  setInterval(() => {
+    cleanupOldBatches();
+  }, 15 * 60 * 1000); // 15 minutes in milliseconds
+  
+  console.log('Automatic cleanup scheduled: PDFs older than 1 hour will be deleted every 15 minutes');
 });
