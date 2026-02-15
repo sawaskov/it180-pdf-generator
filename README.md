@@ -1,49 +1,66 @@
 # IT180 PDF Form Generator
 
-Automated tool for generating IT180 tax forms from Excel data.
+A Node.js/Express web application for generating IT180 tax forms from Excel data.
 
-## Two Ways to Use
+## Features
 
-### 🌐 Web Application (Recommended)
-1. Install dependencies: `pip install -r requirements.txt`
-2. Run: `python app.py`
-3. Open browser: `http://localhost:5000`
-4. Upload Excel file and download PDFs
+- Upload Excel files (.xlsx, .xls)
+- Automatically generate IT180 PDF forms for each row
+- Download all generated PDFs as a ZIP file
+- Modern, responsive UI
+- Real-time progress tracking
 
-See **WEB_APP_GUIDE.md** for complete web app instructions.
+## Quick Start
 
-### 💻 Command Line
-1. Place your Excel file in the `Input` folder
-2. Run the script: `python Scripts\fill_pdf_complete.py`
-3. Find your PDFs in: `Output\IT180 Docs\`
+### Installation
 
-See **USER_GUIDE.md** for complete command-line instructions.
+```bash
+npm install
+```
 
-## Folder Structure
+### Development
 
-- **app.py** - Web application (Flask)
-- **templates/** - HTML templates for web interface
-- **static/** - CSS and JavaScript files
-- **Input/** - Place your Excel file here (command-line mode)
-- **Output/** - Generated PDFs appear here (command-line mode)
-- **Scripts/** - Command-line processing script
-- **Templates/** - PDF template file
-- **Archive/** - Old versions and test files
+```bash
+npm run dev
+```
+
+### Production
+
+```bash
+npm start
+```
+
+The application will be available at `http://localhost:3000`
+
+## Deployment
+
+See `DEPLOY_NODEJS.md` for detailed deployment instructions.
+
+Quick deploy: Run `DEPLOY_NOW_NODEJS.bat` for automated deployment assistance.
 
 ## Requirements
 
-### For Web Application
-- Python 3.x
-- Flask, pandas, pypdf, reportlab, openpyxl
+- Node.js 18.0.0 or higher
+- npm 9.0.0 or higher
 
-Install with: `pip install -r requirements.txt`
+## Project Structure
 
-### For Command Line Only
-- Python 3.x
-- Libraries: pandas, pypdf, reportlab, openpyxl
+```
+├── server.js              # Express server
+├── package.json           # Dependencies
+├── views/                 # HTML templates
+│   └── index.html
+├── public/                # Static files
+│   ├── style.css
+│   ├── script.js
+│   └── logo.webp
+├── utils/                 # Utility functions
+│   └── pdfGenerator.js
+├── Templates/             # PDF template
+│   └── IT180-Declaration-by-Employer-to-Claim-Deduction-against-Learnerships-External-Form.pdf
+└── temp/                  # Temporary file storage
+```
 
-Install with: `pip install pandas pypdf reportlab openpyxl`
+## License
 
-## Support
-
-For detailed instructions, troubleshooting, and Excel format requirements, see USER_GUIDE.md
+ISC

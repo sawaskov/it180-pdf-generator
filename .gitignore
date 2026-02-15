@@ -1,41 +1,53 @@
-__pycache__/
-*.py[cod]
-*$py.class
-*.so
-.Python
-env/
-venv/
-ENV/
-.venv
-*.zip
-# Allow template PDF files needed for the app
-!Templates/*.pdf
-!IT180-Declaration-by-Employer-to-Claim-Deduction-against-Learnerships-External-Form.pdf
+# Dependencies
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Environment variables
+.env
+.env.local
+.env.production
+
+# Temporary files
 temp/
-tmp/
-.DS_Store
+*.tmp
 *.log
 
-# Generated output files
-Output/
+# OS files
+.DS_Store
+Thumbs.db
+desktop.ini
 
-# Archive folder with old/test files
-Archive/
-
-# Input files (may contain sensitive data)
-Input/
-
-# IDE and editor files
+# IDE files
 .vscode/
 .idea/
 *.swp
 *.swo
 *~
 
-# OS files
-Thumbs.db
-.DS_Store
+# Build outputs
+dist/
+build/
 
-# Environment variables
-.env
-.env.local
+# Python (if any remaining)
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+env/
+ENV/
+
+# Output files
+Output/
+*.pdf
+*.zip
+
+# IDE and editor files
+*.sublime-project
+*.sublime-workspace
+
+# Archive files
+Archive/

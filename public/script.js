@@ -11,13 +11,6 @@ const downloadBtn = document.getElementById('downloadBtn');
 
 let currentSessionId = null;
 
-// Button click handler - prevent event bubbling
-chooseFileBtn.addEventListener('click', (e) => {
-    e.stopPropagation();
-    e.preventDefault();
-    fileInput.click();
-});
-
 // Drag and drop handlers
 uploadBox.addEventListener('dragover', (e) => {
     e.preventDefault();
@@ -38,19 +31,23 @@ uploadBox.addEventListener('drop', (e) => {
     }
 });
 
+// Handle click on upload box (but not on the button)
 uploadBox.addEventListener('click', (e) => {
-    // Don't trigger if clicking the button, its children, or any interactive element
-    if (e.target.closest('.btn-primary') || e.target.closest('button') || e.target.tagName === 'BUTTON') {
-        return;
+    // Only trigger if the click is not on the button
+    if (e.target !== chooseFileBtn && !chooseFileBtn.contains(e.target)) {
+        fileInput.click();
     }
+});
+
+// Handle button click - prevent event bubbling
+chooseFileBtn.addEventListener('click', (e) => {
+    e.stopPropagation(); // Prevent the uploadBox click handler from firing
     fileInput.click();
 });
 
 fileInput.addEventListener('change', (e) => {
     if (e.target.files.length > 0) {
         handleFile(e.target.files[0]);
-        // Reset input to allow selecting the same file again if needed
-        e.target.value = '';
     }
 });
 
@@ -82,55 +79,63 @@ function uploadFile(file) {
     const formData = new FormData();
     formData.append('file', file);
 
-    // Show progress immediately
+    // Show progress
     progressSection.style.display = 'block';
-    progressFill.style.width = '10%';
-    progressText.textContent = 'Uploading and processing...';
+    progressFill.style.width = '0%';
+    progressText.textContent = 'Uploading and processing... 0%';
 
-    // Start fetch immediately - no artificial delays
+    // Simulate progress with percentage indicator
+    // Progress starts fast, then slows down as it approaches completion
+    let progress = 0;
+    const startTime = Date.now();
+    const estimatedDuration = 15000; // 15 seconds estimated
+    
+    const progressInterval = setInterval(() => {
+        const elapsed = Date.now() - startTime;
+        const timeBasedProgress = Math.min((elapsed / estimatedDuration) * 100, 95);
+        
+        // Combine time-based with random increments for more realistic feel
+        // Progress slows down as it approaches 90%
+        if (progress < 90) {
+            const increment = Math.random() * (10 - (progress / 10));
+            progress = Math.min(progress + increment, 90);
+        } else {
+            // Very slow progress from 90% to 95%
+            progress = Math.min(progress + Math.random() * 0.5, 95);
+        }
+        
+        // Use the higher of time-based or calculated progress
+        progress = Math.max(progress, timeBasedProgress);
+        
+        // Update progress bar and percentage
+        const displayProgress = Math.floor(progress);
+        progressFill.style.width = displayProgress + '%';
+        progressText.textContent = `Uploading and processing... ${displayProgress}%`;
+    }, 150);
+
     fetch('/upload', {
         method: 'POST',
         body: formData
     })
-    .then(async response => {
-        progressFill.style.width = '70%';
-        progressText.textContent = 'Processing file...';
-        
-        // Check if response is JSON
-        const contentType = response.headers.get('content-type');
-        if (contentType && contentType.includes('application/json')) {
-            const data = await response.json();
-            return { ok: response.ok, data: data, status: response.status };
-        } else {
-            // If not JSON, read as text to see what we got
-            const text = await response.text();
-            throw new Error(`Server returned HTML instead of JSON. Status: ${response.status}. Response: ${text.substring(0, 200)}`);
-        }
-    })
-    .then(result => {
+    .then(response => response.json())
+    .then(data => {
+        clearInterval(progressInterval);
         progressFill.style.width = '100%';
-        progressText.textContent = 'Complete!';
+        progressText.textContent = 'Complete! 100%';
 
-        // Show results immediately - no artificial delay
-        if (result.ok && result.data.success) {
-            showResults(result.data);
-        } else {
-            showError(result.data.error || 'An error occurred while processing the file');
-        }
-        progressSection.style.display = 'none';
+        setTimeout(() => {
+            if (data.success) {
+                showResults(data);
+            } else {
+                showError(data.error || 'An error occurred while processing the file');
+            }
+            progressSection.style.display = 'none';
+        }, 500);
     })
     .catch(error => {
+        clearInterval(progressInterval);
         progressSection.style.display = 'none';
-        // Extract meaningful error message
-        let errorMsg = 'An error occurred while processing the file';
-        if (error.message) {
-            if (error.message.includes('HTML instead of JSON')) {
-                errorMsg = 'Server error: The server returned an error page. Please check the server logs or try again.';
-            } else {
-                errorMsg = 'Error: ' + error.message;
-            }
-        }
-        showError(errorMsg);
+        showError('Network error: ' + error.message);
     });
 }
 

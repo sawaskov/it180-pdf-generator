@@ -1,9 +1,13 @@
 services:
   - type: web
     name: it180-pdf-generator
-    env: python
-    buildCommand: pip install -r requirements.txt
-    startCommand: python app.py
+    env: node
+    rootDir: .
+    buildCommand: npm install
+    startCommand: npm start
     envVars:
-      - key: PYTHON_VERSION
-        value: 3.11
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 3000
+    plan: free

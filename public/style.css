@@ -31,12 +31,14 @@ header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    max-width: 100%;
+    max-width: 1200px;
+    margin: 0 auto;
+    gap: 30px;
 }
 
 .header-text {
-    text-align: center;
     flex: 1;
+    text-align: left;
 }
 
 header h1 {
@@ -45,16 +47,39 @@ header h1 {
     font-weight: 700;
 }
 
-.header-logo {
-    max-height: 80px;
-    width: auto;
-    object-fit: contain;
-    margin-left: 20px;
-}
-
 .subtitle {
     font-size: 1.1em;
     opacity: 0.9;
+}
+
+.header-logo {
+    height: 80px;
+    width: auto;
+    max-width: 200px;
+    object-fit: contain;
+    background: rgba(255, 255, 255, 0.95);
+    padding: 8px;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+@media (max-width: 768px) {
+    .header-content {
+        flex-direction: column;
+        text-align: center;
+    }
+    
+    .header-text {
+        text-align: center;
+    }
+    
+    .header-logo {
+        height: 60px;
+    }
+    
+    header h1 {
+        font-size: 2em;
+    }
 }
 
 main {
@@ -361,26 +386,8 @@ footer {
 }
 
 @media (max-width: 768px) {
-    header {
-        padding: 30px 20px;
-    }
-
-    .header-content {
-        flex-direction: column;
-        gap: 20px;
-    }
-
-    .header-text {
-        text-align: center;
-    }
-
     header h1 {
         font-size: 2em;
-    }
-
-    .header-logo {
-        max-height: 60px;
-        margin-left: 0;
     }
 
     main {

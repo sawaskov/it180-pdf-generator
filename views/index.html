@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>IT180 PDF Generator</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="stylesheet" href="/static/style.css">
 </head>
 <body>
     <div class="container">
@@ -14,7 +14,7 @@
                     <h1>IT180 PDF Form Generator</h1>
                     <p class="subtitle">Generate IT180 tax forms from Excel data</p>
                 </div>
-                <img src="{{ url_for('static', filename='logo.webp') }}" alt="Speccon Holdings Logo" class="header-logo">
+                <img src="/static/logo.webp" alt="SpecCon Holdings Logo" class="header-logo">
             </div>
         </header>
 
@@ -30,7 +30,7 @@
                         <h2>Upload Excel File</h2>
                         <p>Drag and drop your Excel file here, or click to browse</p>
                         <input type="file" id="fileInput" accept=".xlsx,.xls" hidden>
-                        <button class="btn-primary" onclick="document.getElementById('fileInput').click()">
+                        <button class="btn-primary" id="chooseFileBtn">
                             Choose File
                         </button>
                         <p class="file-info" id="fileInfo"></p>
@@ -159,6 +159,6 @@
         </footer>
     </div>
 
-    <script src="{{ url_for('static', filename='script.js') }}"></script>
+    <script src="/static/script.js"></script>
 </body>
 </html>

@@ -1,0 +1,39 @@
+╔══════════════════════════════════════════════════════════════╗
+║   IT180 PDF Generator - Node.js Quick Deploy Guide          ║
+╚══════════════════════════════════════════════════════════════╝
+
+🚀 FASTEST WAY TO DEPLOY (5 MINUTES):
+
+1. Double-click: DEPLOY_NOW_NODEJS.bat
+2. Choose option 1 (Deploy to Render.com)
+3. Follow the on-screen instructions
+
+OR MANUAL STEPS:
+
+1. Create GitHub Repository:
+   - Go to: https://github.com/new
+   - Name: it180-pdf-generator-nodejs
+   - Make it PUBLIC
+   - Create repository
+
+2. Push Code to GitHub:
+   - Open PowerShell in project folder
+   - Run: git init
+   - Run: git add .
+   - Run: git commit -m "Initial commit"
+   - Run: git remote add origin YOUR_REPO_URL
+   - Run: git push -u origin main
+
+3. Deploy to Render.com:
+   - Go to: https://render.com
+   - Sign up with GitHub
+   - Click "New +" → "Web Service"
+   - Connect your GitHub repo
+   - Build Command: npm install
+   - Start Command: npm start
+   - Plan: Free
+   - Deploy!
+
+✅ DONE! Your app will be live at: https://your-app.onrender.com
+
+For detailed instructions, see: DEPLOY_NODEJS.md
